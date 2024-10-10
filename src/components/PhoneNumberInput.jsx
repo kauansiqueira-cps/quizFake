@@ -18,19 +18,20 @@ const PhoneNumberInput = () => {
 
   const handleSubmit = async () => {
     try {
-      // Salvando cada número no Firestore
-      for (let number of phoneNumbers) {
-        if (number !== '') {
-          await addDoc(collection(db, 'phoneNumbers'), {
-            phoneNumber: number,
-          });
-        }
+      const validPhoneNumbers = phoneNumbers.filter(number => number !== '');
+    
+      for (let i = 0; i < validPhoneNumbers.length; i++) {
+        const option = `Pessoa${i + 1}`;  // Associa cada número a uma alternativa
+        await addDoc(collection(db, 'phoneNumbers'), {
+          phoneNumber: validPhoneNumbers[i],
+          option: option,  // Armazena a alternativa junto com o número
+          fcmToken: token
+        });
       }
+  
       alert('Números de telefone enviados com sucesso!');
-      
-      dispatch({ type: "COLLECT_PHONE_NUMBERS" });
-      console.log("Novo estado após coleta:", quizState); // Verifique o estágio atual
-
+    
+      dispatch({ type: "SEND_NOTIFICATIONS", payload: { phoneNumbers: validPhoneNumbers } });
     } catch (error) {
       console.error("Erro ao salvar números: ", error);
       alert('Erro ao enviar os números.');

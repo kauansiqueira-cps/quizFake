@@ -19,13 +19,17 @@ const Question = () => {
   }
 
   const onSelectOption = (option) => {
-    dispatch({
-      type: "CHECK_ANSWER",
-      payload: { answer: currentQuestion.answer, option },
-    });
+    if (option === quizState.correctPerson) {  // Verifica se a alternativa correta foi escolhida
+      dispatch({
+        type: "CHECK_ANSWER",
+        payload: { answer: currentQuestion.answer, option },
+      });
+    } else {
+      dispatch({
+        type: "WRONG_ANSWER",
+      });
+    }
   };
-
-  console.log(quizState.optionToHide);
 
   return (
     <div id="question">
@@ -37,13 +41,15 @@ const Question = () => {
         {currentQuestion.options.map((option, index) => (
           <Option
             option={option}
-            key={index} // Usar o index como key é seguro aqui
+            key={index}  // Usar o index como key é seguro aqui
             answer={currentQuestion.answer}
             selectOption={() => onSelectOption(option)}
             hide={quizState.optionToHide === option ? "hide" : null}
           />
         ))}
       </div>
+
+      {/* Dica e exclusão de alternativas */}
       {!quizState.answerSelected && !quizState.help && (
         <>
           {currentQuestion.tip && (
@@ -54,9 +60,12 @@ const Question = () => {
           </button>
         </>
       )}
+      {/* Mostra a dica se a ajuda for solicitada */}
       {!quizState.answerSelected && quizState.help === "tip" && (
         <p>{currentQuestion.tip}</p>
       )}
+
+      {/* Avança para a próxima pergunta após selecionar a resposta */}
       {quizState.answerSelected && (
         <button onClick={() => dispatch({ type: "CHANGE_QUESTION" })}>
           Continuar
