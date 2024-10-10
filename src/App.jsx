@@ -10,7 +10,7 @@ import GameOver from "./components/GameOver";
 import "./App.css";
 
 function App() {
-  const [quizState, dispatch] = useContext(QuizContext);
+  const [quizState, dispatch] = useContext(QuizContext); 
 
   return (
     <div className="App">

@@ -1,58 +1,39 @@
-import { createContext, useReducer } from "react";
-import questions from "../data/questions_complete";
-
-const STAGES = ["Start", "Category", "PhoneNumber", "Playing", "End"];
+// quiz.jsx ou no seu arquivo de contexto
+import React, { createContext, useReducer } from "react";
+import questions from "../data/questions_complete"; // Ajuste o caminho conforme necessário
 
 const initialState = {
-  gameStage: STAGES[0],
-  questions,
+  questions: questions, // Carrega as perguntas na inicialização
   currentQuestion: 0,
   answerSelected: false,
-  score: 0,
   help: false,
+  score: 0,
   optionToHide: null,
+  gameStage: "Start",
 };
 
-console.log(initialState);
+
+const QuizContext = createContext();
+
+const STAGES = ["Start", "Category", "PhoneNumber", "Playing", "End"];
 
 const quizReducer = (state, action) => {
   switch (action.type) {
     case "CHANGE_STAGE":
-      return {
-        ...state,
-        gameStage: STAGES[1], // Vai para a escolha de categoria
-      };
-
-    case "START_GAME":
-      return {
-        ...state,
-        gameStage: STAGES[2], // Vai para a tela de coleta de números
-      };
-
-    case "COLLECT_PHONE_NUMBERS": 
-      let quizQuestions = null;
-
-      // Encontra as perguntas da categoria
-      state.questions.forEach((question) => {
-        if (question.category === action.payload) {
-          quizQuestions = question.questions;
-        }
-      });
-
-      if (!quizQuestions) {
-        return {
-          ...state,
-          gameStage: STAGES[0], // Volta para o início se não encontrar perguntas
-        };
+      // Verifica se o array de perguntas tem elementos antes de embaralhar
+      if (!state.questions || state.questions.length === 0) {
+        console.error("Nenhuma pergunta disponível.");
+        return state;
       }
 
-      // Embaralha as perguntas e limita a 5
-      const shuffledQuestions = quizQuestions.sort(() => Math.random() - 0.5).slice(0, 5);
+      const shuffledQuestions = state.questions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 5);
 
       return {
         ...state,
         questions: shuffledQuestions,
-        gameStage: STAGES[3], // Agora começa o jogo
+        gameStage: STAGES[2], // Vai para a fase de coleta de números
       };
 
     case "REORDER_QUESTIONS":
@@ -65,26 +46,43 @@ const quizReducer = (state, action) => {
         questions: reorderedQuestions,
       };
 
+    case "START_GAME":
+      // Mudando para a fase de "PhoneNumber"
+      return {
+        ...state,
+        gameStage: STAGES[2], // Vai para a fase de coleta de números
+      };
+
+    case "COLLECT_PHONE_NUMBERS":
+      // Quando os números forem coletados, inicia o jogo
+      return {
+        ...state,
+        gameStage: STAGES[3], // Vai para a fase de "Playing"
+      };
+    case "NEW_GAME": {
+      console.log(questions);
+      console.log(initialState);
+      return initialState;
+    }
     case "CHANGE_QUESTION": {
       const nextQuestion = state.currentQuestion + 1;
-      let endGame = false;
 
-      if (!state.questions[nextQuestion]) {
-        endGame = true;
+      // Verifica se ainda existem perguntas
+      if (nextQuestion >= state.questions.length) {
+        return {
+          ...state,
+          gameStage: STAGES[4], // Finaliza o jogo se não houver mais perguntas
+        };
       }
 
       return {
         ...state,
         currentQuestion: nextQuestion,
-        gameStage: endGame ? STAGES[4] : state.gameStage,
         answerSelected: false,
         help: false,
       };
     }
 
-    case "NEW_GAME": {
-      return initialState;
-    }
 
     case "CHECK_ANSWER": {
       if (state.answerSelected) return state;
@@ -110,17 +108,9 @@ const quizReducer = (state, action) => {
     }
 
     case "REMOVE_OPTION": {
-      const questionWithoutOption = state.questions[state.currentQuestion];
-
-      let repeat = true;
-      let optionToHide;
-
-      questionWithoutOption.options.forEach((option) => {
-        if (option !== questionWithoutOption.answer && repeat) {
-          optionToHide = option;
-          repeat = false;
-        }
-      });
+      const question = state.questions[state.currentQuestion];
+      const options = question.options.filter(opt => opt !== question.answer);
+      const optionToHide = options[Math.floor(Math.random() * options.length)];
 
       return {
         ...state,
@@ -135,10 +125,14 @@ const quizReducer = (state, action) => {
 };
 
 
-export const QuizContext = createContext();
-
 export const QuizProvider = ({ children }) => {
-  const value = useReducer(quizReducer, initialState);
+  const [quizState, dispatch] = useReducer(quizReducer, initialState);
 
-  return <QuizContext.Provider value={value}>{children}</QuizContext.Provider>;
+  return (
+    <QuizContext.Provider value={[quizState, dispatch]}>
+      {children}
+    </QuizContext.Provider>
+  );
 };
+
+export { QuizContext };

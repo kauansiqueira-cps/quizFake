@@ -1,4 +1,4 @@
-const data = [
+const questions = [
   {
     category: "Desinformação (Identifique a Fake News)",
     questions: [
@@ -292,4 +292,4 @@ const data = [
   },
 ];
 
-export default data;
+export default questions;

@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { getFirestore, collection, addDoc } from "firebase/firestore"; 
 import { app } from '../notifications/firebase';
 import { QuizContext } from '../context/quiz';
+import "./PhoneNumberInput.css";
 
 const db = getFirestore(app); 
 
@@ -27,8 +28,9 @@ const PhoneNumberInput = () => {
       }
       alert('Números de telefone enviados com sucesso!');
       
-      // Dispara a ação para mudar o estado do jogo para a fase de "Playing"
       dispatch({ type: "COLLECT_PHONE_NUMBERS" });
+      console.log("Novo estado após coleta:", quizState); // Verifique o estágio atual
+
     } catch (error) {
       console.error("Erro ao salvar números: ", error);
       alert('Erro ao enviar os números.');
@@ -36,12 +38,13 @@ const PhoneNumberInput = () => {
   };
 
   return (
-    <div>
+    <div id="numero">
       <h1>Digite 4 números de telefone</h1>
       {phoneNumbers.map((phone, index) => (
         <input
           key={index}
           type="text"
+          className='numero_input'
           placeholder="Digite o número de telefone"
           value={phone}
           onChange={(e) => handlePhoneChange(index, e.target.value)}
