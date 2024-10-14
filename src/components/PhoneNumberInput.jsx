@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import { getFirestore, collection, addDoc } from "firebase/firestore"; 
-import { app } from '../notifications/firebase';
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { app } from '../notifications/firebase'; // Certifique-se de ter a inicialização do Firebase
 import { QuizContext } from '../context/quiz';
 import "./PhoneNumberInput.css";
 
-const db = getFirestore(app); 
+const db = getFirestore(app);
 
 const PhoneNumberInput = () => {
   const [phoneNumbers, setPhoneNumbers] = useState(['', '', '', '']);
@@ -27,14 +27,26 @@ const PhoneNumberInput = () => {
         }
       }
       alert('Números de telefone enviados com sucesso!');
-      
-      dispatch({ type: "COLLECT_PHONE_NUMBERS" });
-      console.log("Novo estado após coleta:", quizState); // Verifique o estágio atual
+      dispatch({ type: "COLLECT_PHONE_NUMBERS", payload: phoneNumbers });
 
+      // Chamar o backend (Firebase Functions ou outro) para enviar as alternativas
+      await enviarMensagens(phoneNumbers);
     } catch (error) {
       console.error("Erro ao salvar números: ", error);
       alert('Erro ao enviar os números.');
     }
+  };
+
+  const enviarMensagens = async (phoneNumbers) => {
+    const response = await fetch('https://flawless-mountainous-orangutan.glitch.me/send-notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phoneNumbers, currentQuestion: quizState.questions[quizState.currentQuestion] }),
+    });    
+    const data = await response.json();
+    console.log('Mensagens enviadas:', data);
   };
 
   return (
