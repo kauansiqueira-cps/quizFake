@@ -11,8 +11,6 @@ const PickCategory = () => {
 
   function chooseCategoryAndReorderQuestions(category) {
     dispatch({ type: "START_GAME", payload: category });
-
-    dispatch({ type: "REORDER_QUESTIONS" });
   }
 
   return (

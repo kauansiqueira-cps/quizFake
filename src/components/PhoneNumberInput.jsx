@@ -15,6 +15,7 @@ const PhoneNumberInput = () => {
     newPhoneNumbers[index] = value;
     setPhoneNumbers(newPhoneNumbers);
   };
+  
 
   const handleSubmit = async () => {
     try {
@@ -38,16 +39,62 @@ const PhoneNumberInput = () => {
   };
 
   const enviarMensagens = async (phoneNumbers) => {
-    const response = await fetch('https://flawless-mountainous-orangutan.glitch.me/send-notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ phoneNumbers, currentQuestion: quizState.questions[quizState.currentQuestion] }),
-    });    
-    const data = await response.json();
-    console.log('Mensagens enviadas:', data);
+    dispatch({ type: "REORDER_QUESTIONS" });
+    // Verifica se quizState e suas propriedades estão definidos
+    if (!quizState || !quizState.questions || !quizState.questions.length) {
+      console.error('O estado do quiz não está definido corretamente.');
+      return;
+    }
+  
+    // Verifica se currentQuestion é um índice válido
+    if (quizState.currentQuestion < 0 || quizState.currentQuestion >= quizState.questions.length) {
+      console.error('currentQuestion é um índice inválido.');
+      return;
+    }
+    
+   const currentQuestionIndex = quizState.currentQuestion;
+   const currentQuestion = quizState.questions[currentQuestionIndex]; // Aqui você acessa a pergunta
+    console.log('Pergunta atual:', currentQuestion); // Agora deve mostrar a pergunta específica
+    console.log('Opções:', currentQuestion.options);  // Verifique as opções
+    // Verifica se a pergunta atual possui opções
+    console.log('currentQuestion', currentQuestion)
+    console.log('currentQuestionQuestions', currentQuestion.questions)
+    console.log('currentQuestionQuestionsOptions', currentQuestion.questions[currentQuestionIndex])
+    console.log('currentQuestionQuestionsOptionsOptions', currentQuestion.questions[currentQuestionIndex].options)
+    if (!currentQuestion.questions[currentQuestionIndex].options || currentQuestion.questions[currentQuestionIndex].options < 5) {
+      console.error('A pergunta atual não possui opções suficientes.');
+      return;
+    }
+
+    // Pegue as 4 primeiras alternativas
+    const alternatives = currentQuestion.questions[currentQuestionIndex].options.slice(); 
+  
+    // Associa cada número a uma alternativa e uma pessoa (Pessoa 1, Pessoa 2, etc.)
+    const messages = phoneNumbers.map((number, index) => ({
+      phoneNumber: number,
+      alternative: alternatives[index],
+      person: `Pessoa ${index + 1}`
+    }));
+
+    console.log(messages);
+  
+    try {
+      const response = await fetch('https://quizfake.glitch.me/send-sms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messages }),
+      });
+      const data = await response.json();
+      console.log('Mensagens enviadas:', data);
+    } catch (error) {
+      console.error('Erro ao enviar mensagens:', error);
+    }
   };
+  
+  
+  
 
   return (
     <div id="numero">

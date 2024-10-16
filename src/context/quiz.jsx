@@ -17,13 +17,14 @@ console.log(initialState);
 
 const quizReducer = (state, action) => {
   switch (action.type) {
+    
     case "COLLECT_PHONE_NUMBERS":
       // Quando os números forem coletados, inicia o jogo
       return {
         ...state,
         gameStage: STAGES[2], // Vai para a fase de "Playing"
       };
-
+      
     case "CHANGE_STAGE":
       return {
         ...state,
@@ -59,22 +60,37 @@ const quizReducer = (state, action) => {
         questions: reorderedQuestions,
       };
 
-    case "CHANGE_QUESTION": {
-      const nextQuestion = state.currentQuestion + 1;
-      let endGame = false;
-
-      if (!state.questions[nextQuestion]) {
-        endGame = true;
+      case "CHECK_ANSWER": {
+        const { option, answer } = action.payload;
+  
+        // Verifica se a resposta selecionada está correta
+        console.log("Opção:", option )
+        console.log("Resposta:", answer )
+        const isCorrect = option === answer;
+        const scoreIncrement = isCorrect ? 1 : 0;
+  
+        return {
+          ...state,
+          answerSelected: option,  // Marca a opção selecionada
+          isCorrect,  // Armazena se a resposta está correta
+          score: state.score + scoreIncrement,  // Incrementa o score se a resposta estiver correta
+        };
       }
-
-      return {
-        ...state,
-        currentQuestion: nextQuestion,
-        gameStage: endGame ? STAGES[3] : state.gameStage,
-        answerSelected: false,
-        help: false,
-      };
-    }
+  
+      case "CHANGE_QUESTION": {
+        const nextQuestion = state.currentQuestion + 1;
+        if(nextQuestion >= 5){
+          return {gameStage: STAGES[4]}
+        }
+        return {
+          ...state,
+          currentQuestion: nextQuestion,  // Atualiza para a próxima pergunta
+          answerSelected: false,  // Reseta a seleção de resposta
+          isCorrect: null,  // Reseta o status de correção
+          
+        };
+        
+      }
 
     case "NEW_GAME": {
       console.log(questions);
@@ -82,21 +98,7 @@ const quizReducer = (state, action) => {
       return initialState;
     }
 
-    case "CHECK_ANSWER": {
-      if (state.answerSelected) return state;
-
-      const answer = action.payload.answer;
-      const option = action.payload.option;
-      let correctAnswer = 0;
-
-      if (answer === option) correctAnswer = 1;
-
-      return {
-        ...state,
-        score: state.score + correctAnswer,
-        answerSelected: option,
-      };
-    }
+    
 
     case "SHOW_TIP": {
       return {
